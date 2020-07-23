@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
+#include <QPixmap>
 #include "ui_QILT.h"
 
 class QILT : public QMainWindow

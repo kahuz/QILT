@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>		// basic OpenCV structures ( Mat , Scalar, etc... )
 #include <opencv2/videoio.hpp>	// for VideoCapture, VideoWriter
 #include <opencv2/highgui.hpp>	// OpenCV Window IO
+#include <opencv2/opencv.hpp>
 //cpp lib
 #include <iostream>
 #include <string>
@@ -20,7 +21,7 @@ int frame_cnt = 0;
 //param flags : mouse flags
 //param user_data : 추가적으로 전달받을 데이터
 void video_mouse_callback(int event, int x, int y, int flags, void* user_data) {
-	cout << "Cur Event : " << event << " Flags : " << flags << " Cur x : " << x << " Cur y : " << y << endl;
+	std::cout << "Cur Event : " << event << " Flags : " << flags << " Cur x : " << x << " Cur y : " << y << std::endl;
 
 	if (EVENT_MOUSEMOVE)//0
 	{
@@ -43,17 +44,18 @@ void video_mouse_callback(int event, int x, int y, int flags, void* user_data) {
 			wheel_val--;
 	}
 }
-
-QILT::QILT(QWidget *parent)
-    : QMainWindow(parent)
+const QString main_title = "QILT title";
+QILT::QILT(QWidget* parent)
+	: QMainWindow(parent)
 {
-    ui.setupUi(this);
+	ui.setupUi(this);
+
 	//영상 경로를 전역변수가 아닌 입력에 따라 변경할 경우 아래 주석을 따르면 된다
-//cout << "input file path\n";
-//cin >> video_path;
-//cout << "file path is " << video_path << endl;
-//video_path의 영상 파일 정보를 가져온다. CAP_FFMPEG는 영상 파일을 읽어오거나 FFPMEG 라이브러리를 이용해 스트리밍을 제공
-//단순 파일을 읽어올 경우 CAP_FFMPEG 플래그를 생략해도 상관 없다
+	//cout << "input file path\n";
+	//cin >> video_path;
+	//cout << "file path is " << video_path << endl;
+	//video_path의 영상 파일 정보를 가져온다. CAP_FFMPEG는 영상 파일을 읽어오거나 FFPMEG 라이브러리를 이용해 스트리밍을 제공
+	//단순 파일을 읽어올 경우 CAP_FFMPEG 플래그를 생략해도 상관 없다
 	VideoCapture bus_video(video_path);
 
 	//bus_video에 연결된 영상 파일로부터 프레임 이미지를 받아올 Mat 변수 선언
@@ -64,35 +66,33 @@ QILT::QILT(QWidget *parent)
 	{
 		std::cout << "Could not open video" << video_path << std::endl;
 	}
-
-	//이미지를 출력할 창의 식별자 변수 선언 및 초기화
-	const char* WIN_TITLE = "BUS Video";
-	//이미지를 출력할 창을 생성
-	namedWindow(WIN_TITLE, WINDOW_AUTOSIZE);
-
+	bool is_play = true;
 	//while을 돌며 bus_video로부터 프레임 이미지를 읽어옴
-	while (true)
+	while (is_play)
 	{
 		//bus_video로부터 하나의 프레임을 읽어 bus_image에 저장
 		bus_video >> bus_image;
-
 		//bus_image가 전달받은 이미지가 없다면
 		if (bus_image.empty())
 		{
 			std::cout << "video end" << std::endl;
 			break;
 		}
+
+		//opencv로 받아온 이미지는 BGR 형태로 저장되므로 마지막 플래그를 BFR888로 전달하여 이미지 저장
+		ui.main_label->setPixmap(QPixmap::fromImage(QImage(bus_image.data, bus_image.cols, bus_image.rows, bus_image.step, QImage::Format_BGR888)));
 		//비디오 프레임 카운트 변수, 생략해도 상관없다
 		frame_cnt++;
 		//비디오 프레임 출력
 		std::cout << "Frame: " << frame_cnt << "\n";
-		//bus_video로부터 읽어온 이미지를 WIN_TITLE 창에 출력
-		imshow(WIN_TITLE, bus_image);
 		//비디오를 읽어올 지연 속도를 waitKey로 지정
 		//33으로 지정한 것은 약 30fps 속도로 출력하기 위함
 		char c = (char)waitKey(33);
-		// esc 키 입력이 들어오면 while 종료
+		//이미지가 변경됬으므로 mainwindow의 컴포넌트를 refrash하기 위해 show 함수 호출
+		this->show();
+		// esc 키 입력이 들어오면 while 종료구문
+		// QT event 형식으로 변경 예정
 		if (c == 27)
-			break;
+			is_play = false;
 	}
 }
