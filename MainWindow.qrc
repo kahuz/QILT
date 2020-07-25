@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>UI_img/tool_label_plus.png</file>
+        <file>UI_img/video_pause.png</file>
+        <file>UI_img/video_play.png</file>
+    </qresource>
+</RCC>
