@@ -104,7 +104,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="QILT.qrc" />
     <QtUic Include="LabelDialog.ui" />
     <QtUic Include="MainWindow.ui" />
     <ClCompile Include="LabelDialog.cpp" />
@@ -119,6 +118,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="LabelDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="MainWindow.qrc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
