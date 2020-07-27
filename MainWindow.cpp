@@ -3,6 +3,15 @@
 #include "MainWindow.h"
 #include <QDesktopWidget>
 
+void MainWindow::draw_label()
+{
+
+}
+
+void MainWindow::save_label()
+{
+
+}
 void MainWindow::open_video(std::string path)
 {
 	if (main_viewer.video.isOpened())
@@ -87,31 +96,6 @@ void MainWindow::play_video(QAction* button, bool play)
 	}
 }
 
-void MainWindow::video_mouse_callback(int event, int x, int y, int flags, void* user_data) {
-	std::cout << "Cur Event : " << event << " Flags : " << flags << " Cur x : " << x << " Cur y : " << y << std::endl;
-
-	if (EVENT_MOUSEMOVE)//0
-	{
-		//왼쪽 버튼을 누른채 드래그 중 임을 암시
-		if (flags == EVENT_FLAG_LBUTTON);
-		//오른쪽 버튼을 누른채 드래그 중 임을 암시
-		else if (flags == EVENT_FLAG_RBUTTON);
-
-	}
-	else if (EVENT_LBUTTONDOWN);	//1
-	else if (EVENT_LBUTTONUP);		//4
-	else if (EVENT_RBUTTONDOWN);	//2
-	else if (EVENT_RBUTTONUP);		//5
-	else if (EVENT_MOUSEHWHEEL)		//10
-	{
-		int wheel_val = 0;
-		if (getMouseWheelDelta(flags) > 0)
-			wheel_val++;
-		else
-			wheel_val--;
-	}
-}
-
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow(parent)
 {
@@ -120,11 +104,18 @@ MainWindow::MainWindow(QWidget* parent)
 	ui.setupUi(this);
 	label_dialog.move(desktop.screenGeometry().width() / 2 + this->width() / 2, desktop.screenGeometry().height() / 2 - this->height() / 2);
 
+	init_viewer_pos_value();
+
+	//connect signal-slot
 	connect(ui.actionOpen_Label_View, SIGNAL(triggered()), this, SLOT(on_triggered_menu_openLabelView()));
 	connect(ui.actionOpen_Video_Image, SIGNAL(triggered()), this, SLOT(on_triggered_menu_openVideoImage()));
 	connect(ui.actionOpen_Images_Directory, SIGNAL(triggered()), this, SLOT(on_triggered_menu_openVideoImage()));
-	connect(ui.actionVideoPlay, SIGNAL(triggered()), this, SLOT(on_triggered_menu_videoPlay()));
-	connect(ui.actionVideoPause, SIGNAL(triggered()), this, SLOT(on_triggered_menu_videoPause()));
+	connect(ui.actionVideoPlay, SIGNAL(triggered()), this, SLOT(on_triggered_videoPlay()));
+	connect(ui.actionVideoPause, SIGNAL(triggered()), this, SLOT(on_triggered_videoPause()));
+	connect(ui.actionLabelling, SIGNAL(triggered()), this, SLOT(on_triggered_labelling()));
+
+	//register event
+	ui.mainLabel->installEventFilter(this);
 }
 
 MainWindow::~MainWindow()
@@ -136,6 +127,73 @@ MainWindow::~MainWindow()
 		main_viewer.set_running(false);
 }
 
+void MainWindow::init_viewer_pos_value()
+{
+	viewer_img_start_pos.x	= 0;
+	viewer_img_start_pos.y	= 0;
+	viewer_img_cur_pos.x	= 0;
+	viewer_img_cur_pos.y	= 0;
+	viewer_img_end_pos.x	= 0;
+	viewer_img_end_pos.y	= 0;
+
+}
+//Whell, MouseButtonDblClick, MouseButtonPress, MouseButtonRelease, MouseMove
+//Event Function
+bool MainWindow::eventFilter(QObject* object, QEvent* event)
+{
+	QMouseEvent* mouseEvent = (QMouseEvent*)event;
+	if (object == ui.mainLabel && b_activeLabel)
+	{
+		switch (event->type())
+		{
+		case QEvent::MouseButtonPress:
+			b_activeLB = true;
+			label_rect.setX(mouseEvent->x());
+			label_rect.setY(mouseEvent->y());
+
+			std::cout << "start x pos : " << label_rect.x() << " start y pos : " << label_rect.y() << "\n";
+
+			break;
+		case QEvent::MouseMove:
+
+			if (b_activeLB)
+			{
+				label_rect.setWidth(std::abs(mouseEvent->x() - label_rect.x()));
+				label_rect.setWidth(std::abs(mouseEvent->y() - label_rect.y()));
+
+				std::cout << "cur width : " << label_rect.width() << " cur height : " << label_rect.height() << "\n";
+				
+			}
+
+			break;
+		case QEvent::MouseButtonRelease:
+			label_rect.setWidth(std::abs(mouseEvent->x() - label_rect.x()));
+			label_rect.setWidth(std::abs(mouseEvent->y() - label_rect.y()));
+			std::cout << "end width : " << label_rect.width() << " end height : " << label_rect.height() << "\n";
+			//call label save func
+
+			//init pos values
+			init_viewer_pos_value();
+			b_activeLB = false;
+
+			break;
+		}
+
+		ui.mainLabel->update();
+	}
+	return false;
+}
+void MainWindow::paintEvent(QPaintEvent* event)
+{
+	QPainter painter;
+	painter.begin(ui.mainLabel);
+
+	if (b_activeLabel && b_activeLB)
+	{
+		painter.drawRect(label_rect);
+
+	}
+}
 //Trigger Functions
 void MainWindow::on_triggered_menu_openVideoImage()
 {
@@ -169,15 +227,22 @@ void MainWindow::on_triggered_menu_openLabelView()
 }
 
 
-void MainWindow::on_triggered_menu_videoPlay()
+void MainWindow::on_triggered_videoPlay()
 {
 	play_video(ui.actionVideoPlay, PLAY);
 }
 
-void MainWindow::on_triggered_menu_videoPause()
+void MainWindow::on_triggered_videoPause()
 {
 	play_video(ui.actionVideoPause, PAUSE);
 }
+
+void MainWindow::on_triggered_labelling()
+{
+	b_activeLabel = !b_activeLabel;
+}
+
+
 
 void Viewer::show()
 {

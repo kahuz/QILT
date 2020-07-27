@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="mainLabel">
+   <widget class="MainViewer" name="mainLabel">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -22,6 +22,12 @@
       <width>640</width>
       <height>320</height>
      </rect>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
     </property>
     <property name="text">
      <string>Video/Image Viewer</string>
@@ -152,6 +158,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MainViewer</class>
+   <extends>QLabel</extends>
+   <header location="global">mainviewer.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="MainWindow.qrc"/>
  </resources>

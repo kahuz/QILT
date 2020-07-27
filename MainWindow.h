@@ -3,7 +3,10 @@
 #include <QtWidgets/QMainWindow>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QMouseEvent>
+#include <QEvent>
 #include <QPixmap>
+#include <QPainter>
 //OpenCV lib
 #include <opencv2/core.hpp>		// basic OpenCV structures ( Mat , Scalar, etc... )
 #include <opencv2/videoio.hpp>	// for VideoCapture, VideoWriter
@@ -14,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <cstdlib>
 //user lib
 #include "ui_MainWindow.h"
 #include "LabelDialog.h"
@@ -48,6 +52,9 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget* parent = Q_NULLPTR);
     ~MainWindow();
+    void init_viewer_pos_value();
+    void draw_label();
+    void save_label();
     void open_video(std::string path);
     void play_video(QAction* button, bool play);
 
@@ -56,17 +63,25 @@ private slots:
     void on_triggered_menu_openVideoImage();
     void on_triggered_menu_openImagesDirectory();
 
-    void on_triggered_menu_videoPlay();
-    void on_triggered_menu_videoPause();
+    void on_triggered_videoPlay();
+    void on_triggered_videoPause();
+    void on_triggered_labelling();
 
 private:
-    void MainWindow::video_mouse_callback(int event, int x, int y, int flags, void* user_data);
-
     const QString main_title = "MainWindow Title";
     LabelDialog label_dialog;
-    bool main_video_play = false;
-
     Viewer main_viewer;
+    bool b_activeLB = false;
+    bool b_activeLabel = false;
+
+    QRect label_rect;
+    cv::Point2i viewer_img_start_pos;
+    cv::Point2i viewer_img_cur_pos;
+    cv::Point2i viewer_img_end_pos;
+    virtual bool eventFilter(QObject* object, QEvent* event);
+    virtual void paintEvent(QPaintEvent* event) override;
+
+    
 
     Ui::MainWindow ui;
 };
