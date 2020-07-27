@@ -33,12 +33,18 @@
     <ClCompile Include="LabelDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MainViewer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="LabelDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MainViewer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
