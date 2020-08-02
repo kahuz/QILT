@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __MAIN_WINDOW__
+#define __MAIN_WINDOW__
 //QT lib
 #include <QtWidgets/QMainWindow>
 #include <QMessageBox>
@@ -21,9 +23,13 @@
 //user lib
 #include "ui_MainWindow.h"
 #include "LabelDialog.h"
+#include "LabelSettingDialog.h"
 
 #define PLAY    true
 #define PAUSE   false
+
+#define LABEL_TEXT_HEIGHT_MARGIN -10
+#define LABEL_TEXT_RATE 0.5
 
 using namespace cv;
 
@@ -35,10 +41,27 @@ public:
     bool is_running();
     bool is_runable();
 
+    void draw_label(int x, int y);
+    void release_label();
+
+    void init_label(int x, int y);
+    void set_label_color(int color);
+    void set_label_thickness(int thickness);
+    void set_label_name(std::string tag);
     void set_running(bool is_running);
     void set_runable(bool is_runable);
     void set_viwer(QLabel* parent_viwer);
     VideoCapture video;
+    Mat view_img;
+    Mat view_org_img;
+
+    Rect label_rect;
+    int label_thickness;
+    std::string label_tag;
+    Scalar label_color;
+    Scalar color_set[COMMON_COLOR_MAX] = { Scalar(0,0,0), Scalar(255,255,255), 
+        Scalar(0,0,255),Scalar(0,255,0), Scalar(255,0,0), Scalar(0,255,255) };
+    
 
 private:
     QLabel *viwer;
@@ -55,8 +78,9 @@ public:
     void init_viewer_pos_value();
     void draw_label();
     void save_label();
+    cv::Range get_Range(int loc_1, int loc_2);
     void open_video(std::string path);
-    void play_video(QAction* button, bool play);
+    void play_video(QAction* play_btn, QAction* pause_btn, bool play);
 
 private slots:
     void on_triggered_menu_openLabelView();
@@ -69,20 +93,21 @@ private slots:
 
 private:
     const QString main_title = "MainWindow Title";
+    int label_file_idx = 1;
     LabelDialog label_dialog;
+    LabelSettingDialog label_setting_dialog;
     Viewer main_viewer;
     bool b_activeLB = false;
     bool b_activeLabel = false;
 
-    QRect label_rect;
     cv::Point2i viewer_img_start_pos;
     cv::Point2i viewer_img_cur_pos;
     cv::Point2i viewer_img_end_pos;
     virtual bool eventFilter(QObject* object, QEvent* event);
-    virtual void paintEvent(QPaintEvent* event) override;
 
     
 
     Ui::MainWindow ui;
 };
 
+#endif

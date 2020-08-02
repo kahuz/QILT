@@ -12,6 +12,23 @@ void MainWindow::save_label()
 {
 
 }
+cv::Range MainWindow::get_Range(int loc_1, int loc_2)
+{
+	int start_loc, end_loc;
+
+	if (loc_1 > loc_2)
+	{
+		start_loc = loc_2;
+		end_loc = loc_1;
+	}
+	else
+	{
+		start_loc = loc_1;
+		end_loc = loc_2;
+	}
+
+	return cv::Range(start_loc, end_loc);
+}
 void MainWindow::open_video(std::string path)
 {
 	if (main_viewer.video.isOpened())
@@ -32,20 +49,17 @@ void MainWindow::open_video(std::string path)
 		}
 	}
 
-	Mat viewer_img;
+	main_viewer.video >> main_viewer.view_img;
 
-	main_viewer.video >> viewer_img;
-
-	ui.mainLabel->setPixmap(QPixmap::fromImage(QImage(viewer_img.data, viewer_img.cols, viewer_img.rows, viewer_img.step, QImage::Format_BGR888)));
+	ui.mainLabel->setPixmap(QPixmap::fromImage(QImage(main_viewer.view_img.data, main_viewer.view_img.cols, main_viewer.view_img.rows, main_viewer.view_img.step, QImage::Format_BGR888)));
 
 	main_viewer.set_runable(true);
 	main_viewer.set_running(PAUSE);
-	main_viewer.set_viwer(ui.mainLabel);
 
-	this->repaint();
+	ui.mainLabel->repaint();
 }
 //note this->repaint()
-void MainWindow::play_video(QAction* button, bool play)
+void MainWindow::play_video(QAction* play_btn, QAction* pause_btn, bool play)
 {
 	std::cout << __FUNCTION__ ;
 	if (play == PLAY)
@@ -55,7 +69,8 @@ void MainWindow::play_video(QAction* button, bool play)
 		if (main_viewer.is_running())
 		{
 			std::cout << " already play " << std::endl;
-			button->setChecked(true);
+			play_btn->setChecked(true);
+			pause_btn->setChecked(false);
 			return;
 		}
 
@@ -67,6 +82,8 @@ void MainWindow::play_video(QAction* button, bool play)
 			std::thread video_thread(&Viewer::show, &main_viewer);
 
 			video_thread.detach();
+
+			pause_btn->setChecked(false);
 		}
 	}
 	else if (play == PAUSE)
@@ -75,9 +92,10 @@ void MainWindow::play_video(QAction* button, bool play)
 		{
 			//일시중지
 			main_viewer.set_running(PAUSE);
+			//재생 중지 혹은 비디오가 출력중이지 않을때 멈춤 버튼을 클릭되지 않은 상태로 돌린다
+			pause_btn->setChecked(true);
+			play_btn->setChecked(false);
 		}
-		//재생 중지 혹은 비디오가 출력중이지 않을때 멈춤 버튼을 클릭되지 않은 상태로 돌린다
-		button->setChecked(true);
 		return;
 	}
 
@@ -91,7 +109,8 @@ void MainWindow::play_video(QAction* button, bool play)
 		if (MsgBox.exec() == QMessageBox::Ok)
 		{
 			MsgBox.close();
-			button->setChecked(false);
+			play_btn->setChecked(false);
+			pause_btn->setChecked(false);
 		}
 	}
 }
@@ -105,6 +124,10 @@ MainWindow::MainWindow(QWidget* parent)
 	label_dialog.move(desktop.screenGeometry().width() / 2 + this->width() / 2, desktop.screenGeometry().height() / 2 - this->height() / 2);
 
 	init_viewer_pos_value();
+
+	main_viewer.set_label_thickness(2);
+	main_viewer.set_label_color(COMMON_COLOR_RED);
+	main_viewer.set_viwer(ui.mainLabel);
 
 	//connect signal-slot
 	connect(ui.actionOpen_Label_View, SIGNAL(triggered()), this, SLOT(on_triggered_menu_openLabelView()));
@@ -144,56 +167,80 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
 	QMouseEvent* mouseEvent = (QMouseEvent*)event;
 	if (object == ui.mainLabel && b_activeLabel)
 	{
+		int mouse_x = mouseEvent->x();
+		int mouse_y = mouseEvent->y();
+		int start_x, start_y, end_x, end_y;
 		switch (event->type())
 		{
 		case QEvent::MouseButtonPress:
+			main_viewer.set_running(PAUSE);
 			b_activeLB = true;
-			label_rect.setX(mouseEvent->x());
-			label_rect.setY(mouseEvent->y());
+			//label_rect.setX(mouseEvent->x());
+			//label_rect.setY(mouseEvent->y());
+			main_viewer.init_label(mouse_x, mouse_y);
+			std::cout << "start x pos : " << mouse_x << " start y pos : " << mouse_y << "\n";
 
-			std::cout << "start x pos : " << label_rect.x() << " start y pos : " << label_rect.y() << "\n";
+			if (label_setting_dialog.get_is_setting())
+			{
+				int label_color = label_setting_dialog.get_label_color();
+				int label_thickness = label_setting_dialog.get_label_thickness();
+				std::string label_tag = label_setting_dialog.get_label_name();
+				
+				main_viewer.set_label_thickness(label_thickness);
+				main_viewer.set_label_color(label_color);
+				main_viewer.set_label_name(label_tag);
 
+				label_setting_dialog.increase_label_cnt();
+				
+			}
 			break;
 		case QEvent::MouseMove:
 
 			if (b_activeLB)
 			{
-				label_rect.setWidth(std::abs(mouseEvent->x() - label_rect.x()));
-				label_rect.setWidth(std::abs(mouseEvent->y() - label_rect.y()));
+				main_viewer.draw_label(mouse_x, mouse_y);
+				std::cout << "draw x : " << mouse_x << " draw y : " << mouse_y << "\n";
+			
+				ui.mainLabel->setPixmap(QPixmap::fromImage(QImage(main_viewer.view_img.data, main_viewer.view_img.cols, main_viewer.view_img.rows, main_viewer.view_img.step, QImage::Format_BGR888)));
 
-				std::cout << "cur width : " << label_rect.width() << " cur height : " << label_rect.height() << "\n";
-				
+				ui.mainLabel->repaint();
 			}
 
 			break;
 		case QEvent::MouseButtonRelease:
-			label_rect.setWidth(std::abs(mouseEvent->x() - label_rect.x()));
-			label_rect.setWidth(std::abs(mouseEvent->y() - label_rect.y()));
-			std::cout << "end width : " << label_rect.width() << " end height : " << label_rect.height() << "\n";
+
+			std::cout << "end width : " << main_viewer.label_rect.width << " end height : " << main_viewer.label_rect.width << "\n";
+			std::cout << "label img x1 : " << main_viewer.label_rect.x << " x2 : " << mouse_x << "label img y1 : " << main_viewer.label_rect.y << " y2 : " << mouse_y << "\n";
+			
+			cv::Mat label_img = main_viewer.view_org_img(get_Range(main_viewer.label_rect.y, mouse_y), get_Range(main_viewer.label_rect.x, mouse_x));
 			//call label save func
+			if (label_dialog.get_is_open())
+			{
+				QPixmap prev_img(QPixmap::fromImage(QImage(label_img.data, label_img.cols, label_img.rows, label_img.step, QImage::Format_BGR888)));
+				label_dialog.draw_prev_img(prev_img);
+			}
+			std::string label_file_name;
+			label_file_name.append(PATH_LABEL_DIR);
+			label_file_name.append(label_setting_dialog.get_label_name());
+			label_file_name.append(IMG_FORMAT_JPG);
+			imwrite(label_file_name, label_img);
+			main_viewer.release_label();
 
 			//init pos values
 			init_viewer_pos_value();
 			b_activeLB = false;
 
+			ui.mainLabel->setPixmap(QPixmap::fromImage(QImage(main_viewer.view_img.data, main_viewer.view_img.cols, main_viewer.view_img.rows, main_viewer.view_img.step, QImage::Format_BGR888)));
+
+			ui.mainLabel->repaint();
+			main_viewer.set_running(PLAY);
 			break;
 		}
 
-		ui.mainLabel->update();
 	}
 	return false;
 }
-void MainWindow::paintEvent(QPaintEvent* event)
-{
-	QPainter painter;
-	painter.begin(ui.mainLabel);
 
-	if (b_activeLabel && b_activeLB)
-	{
-		painter.drawRect(label_rect);
-
-	}
-}
 //Trigger Functions
 void MainWindow::on_triggered_menu_openVideoImage()
 {
@@ -224,22 +271,26 @@ void MainWindow::on_triggered_menu_openLabelView()
 {
 	std::cout << "on_triggered_menu_openLabelView" << std::endl;
 	label_dialog.show();
+	label_dialog.set_is_opne(true);
 }
 
 
 void MainWindow::on_triggered_videoPlay()
 {
-	play_video(ui.actionVideoPlay, PLAY);
+	play_video(ui.actionVideoPlay, ui.actionVideoPause, PLAY);
 }
 
 void MainWindow::on_triggered_videoPause()
 {
-	play_video(ui.actionVideoPause, PAUSE);
+	play_video(ui.actionVideoPlay, ui.actionVideoPause, PAUSE);
 }
 
 void MainWindow::on_triggered_labelling()
 {
 	b_activeLabel = !b_activeLabel;
+
+	if(b_activeLabel)
+		label_setting_dialog.show();
 }
 
 
@@ -250,10 +301,8 @@ void Viewer::show()
 	{
 		while (b_running == PAUSE) { Sleep(100); };
 
-		Mat viewer_img;
-		this->video >> viewer_img;
-		std::cout << "asdf " << std::endl;
-		this->viwer->setPixmap(QPixmap::fromImage(QImage(viewer_img.data, viewer_img.cols, viewer_img.rows, viewer_img.step, QImage::Format_BGR888)));
+		this->video >> this->view_img;
+		this->viwer->setPixmap(QPixmap::fromImage(QImage(view_img.data, view_img.cols, view_img.rows, view_img.step, QImage::Format_BGR888)));
 		//30fps
 		Sleep(33);
 	}
@@ -271,20 +320,62 @@ bool Viewer::is_runable()
 	return this->b_runable;
 }
 
+void Viewer::set_label_color(int color)
+{
+	this->label_color = color_set[color];
+}
+
+void Viewer::set_label_thickness(int thickness)
+{
+	this->label_thickness = thickness;
+}
+
+void Viewer::set_label_name(std::string tag)
+{
+	this->label_tag.clear();
+	this->label_tag.assign(tag, 0, tag.size());
+}
+
+void Viewer::init_label(int x, int y)
+{
+	this->view_org_img = this->view_img.clone();
+	this->label_rect.x = x;
+	this->label_rect.y = y;
+}
+
+void Viewer::draw_label(int x, int y)
+{
+	cv::Point start_label_pos(label_rect.x, label_rect.y + LABEL_TEXT_HEIGHT_MARGIN);
+	cv::Point start_rect_pos(label_rect.x, label_rect.y);
+	cv::Point end_pos(x, y);
+	std::string tag = this->label_tag;
+
+	this->view_img = this->view_org_img.clone();
+
+
+	this->label_rect.width = std::abs(x - this->label_rect.x);
+	this->label_rect.height = std::abs(y - this->label_rect.y);
+
+	cv::rectangle(this->view_img, start_rect_pos, end_pos, this->label_color, this->label_thickness);
+	cv::putText(this->view_img, this->label_tag, start_label_pos, cv::FONT_HERSHEY_SIMPLEX, LABEL_TEXT_RATE,this->label_color, this->label_thickness);
+
+}
+
+void Viewer::release_label()
+{
+	this->label_rect.x = 0;
+	this->label_rect.y = 0;
+	this->view_img = this->view_org_img.clone();
+}
+
 void Viewer::set_running(bool is_running)
 {
-	if (is_running)
-		this->b_running = true;
-	else
-		this->b_running = false;
+	this->b_running = is_running;
 }
 
 void Viewer::set_runable(bool is_runable)
 {
-	if (is_runable)
-		this->b_runable = true;
-	else
-		this->b_runable = false;
+	this->b_runable = is_runable;
 }
 
 void Viewer::set_viwer(QLabel* parent_viwer)
