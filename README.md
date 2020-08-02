@@ -9,7 +9,8 @@
 
 ![](../header.png)
 ## 미리보기
-
+[![QILT Demo Video](http://img.youtube.com/vi/VkJADiJ4rns/0.jpg)](http://www.youtube.com/watch?v=VkJADiJ4rns)
+> 위 사진을 클릭하면 Youtube 영상 페이지로 넘어갑니다.
 ## 설치 방법
 
 업데이트 예정
