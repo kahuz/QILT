@@ -9,7 +9,7 @@
 
 ![](../header.png)
 ## 미리보기
-
+{% include demo_video.html id="VkJADiJ4rns" %}
 ## 설치 방법
 
 업데이트 예정
