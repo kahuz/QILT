@@ -1,0 +1,20 @@
+#pragma once
+#ifndef __COMMON_HEADER__
+#define __COMMON_HEADER__
+
+enum Color
+{
+	COMMON_COLOR_MAX = 6,
+	COMMON_COLOR_BLACK = 0,
+	COMMON_COLOR_WHITE,
+	COMMON_COLOR_RED,
+	COMMON_COLOR_GREEN,
+	COMMON_COLOR_BLUE,
+	COMMON_COLOR_YELLOW,
+};
+
+#define IMG_FORMAT_JPG ".jpg"
+#define PATH_LABEL_DIR "./label_save_dir/"
+
+
+#endif
