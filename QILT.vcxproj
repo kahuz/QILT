@@ -105,8 +105,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtUic Include="LabelDialog.ui" />
+    <QtUic Include="LabelSettingDialog.ui" />
     <QtUic Include="MainWindow.ui" />
     <ClCompile Include="LabelDialog.cpp" />
+    <ClCompile Include="LabelSettingDialog.cpp" />
     <ClCompile Include="MainViewer.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="main.cpp" />
@@ -125,6 +127,12 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainViewer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="LabelSettingDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

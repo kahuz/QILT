@@ -36,6 +36,9 @@
     <ClCompile Include="MainViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LabelSettingDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -47,9 +50,15 @@
     <QtMoc Include="MainViewer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="LabelSettingDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="MainWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="LabelSettingDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="LabelDialog.ui">
@@ -63,5 +72,10 @@
     <QtRcc Include="MainWindow.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
